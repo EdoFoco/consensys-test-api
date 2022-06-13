@@ -47,7 +47,7 @@ const main = async () => {
   app.listen(
     parseInt(process.env.PORT != undefined ? process.env.PORT : "3001"),
     () => {
-      console.log("server started");
+      console.log("Server started!!");
     }
   );
 };

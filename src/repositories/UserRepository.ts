@@ -5,10 +5,13 @@ import { Service } from "typedi";
 @Service()
 @EntityRepository(User)
 export class UserRepository extends Repository<User> {
-  async findOrCreateByAuthId(authId: string): Promise<User> {
+  async findOrCreateByAuthId(
+    authId: string,
+    relations?: string[]
+  ): Promise<User> {
     let user = await this.findOne({
       where: { authId },
-      relations: ["reservations"],
+      relations: relations ?? [],
     });
 
     if (!user) {

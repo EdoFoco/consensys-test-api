@@ -1,7 +1,7 @@
 import { UserRepository } from "../repositories";
 import { Service } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { Reservation } from "src/entities";
+import { Reservation, User } from "../entities";
 
 @Service()
 export class UserService {
@@ -15,7 +15,13 @@ export class UserService {
   }
 
   async getCurrentUserReservations(authId: string): Promise<Reservation[]> {
-    const user = await this.uRepo.findOrCreateByAuthId(authId);
+    const user = await this.uRepo.findOrCreateByAuthId(authId, [
+      "reservations",
+    ]);
     return user.reservations;
+  }
+
+  async getOrCreateUserByAuthId(authId: string): Promise<User> {
+    return await this.uRepo.findOrCreateByAuthId(authId, ["reservations"]);
   }
 }

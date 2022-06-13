@@ -1,8 +1,8 @@
 import { Field, ObjectType } from "type-graphql";
-import { Reservation } from "../../entities";
+import { User } from "../../entities";
 
 @ObjectType()
-export class UserReservationsResponse {
-  @Field(() => [Reservation])
-  reservations: Reservation[];
+export class UserResponse {
+  @Field(() => User)
+  user: User;
 }

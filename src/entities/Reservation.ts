@@ -28,6 +28,7 @@ export class Reservation extends BaseEntity {
   })
   user: User;
 
+  @Field(() => String)
   @PrimaryColumn()
   meetingRoomId: string;
 

@@ -6,6 +6,10 @@ import { Service } from "typedi";
 @EntityRepository(Reservation)
 export class ReservationRepository extends Repository<Reservation> {
   async deleteAllReservations(): Promise<void> {
-    throw new Error("Not implemented");
+    await this.clear();
+  }
+
+  async createReservation(reservation: Reservation): Promise<Reservation> {
+    return await this.create(reservation).save();
   }
 }

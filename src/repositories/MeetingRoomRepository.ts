@@ -10,4 +10,11 @@ export class MeetingRoomRepository extends Repository<MeetingRoom> {
       relations: relations ?? [],
     });
   }
+
+  async getMeetingRoomById(
+    id: String,
+    relations?: string[]
+  ): Promise<MeetingRoom | undefined> {
+    return await this.findOne({ where: { id }, relations: relations ?? [] });
+  }
 }

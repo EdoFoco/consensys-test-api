@@ -2,7 +2,7 @@ import { Query, UseMiddleware, Ctx } from "type-graphql";
 import { Service } from "typedi";
 import { ApiContext, isAuth } from "../../middleware";
 import { UserService } from "../../services";
-import { UserReservationsResponse } from "./UserResolver.types";
+import { UserResponse } from "./UserResolver.types";
 
 @Service()
 export class UserResolver {
@@ -12,14 +12,10 @@ export class UserResolver {
     this.uService = userService;
   }
 
-  @Query(() => UserReservationsResponse)
+  @Query(() => UserResponse)
   @UseMiddleware(isAuth)
-  async getCurrentUserReservations(
-    @Ctx() { identity }: ApiContext
-  ): Promise<UserReservationsResponse> {
-    const reservations = await this.uService.getCurrentUserReservations(
-      identity.sub
-    );
-    return { reservations };
+  async getCurrentUser(@Ctx() { identity }: ApiContext): Promise<UserResponse> {
+    const user = await this.uService.getOrCreateUserByAuthId(identity.sub);
+    return { user };
   }
 }
