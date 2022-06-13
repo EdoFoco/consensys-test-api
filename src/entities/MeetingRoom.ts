@@ -22,16 +22,16 @@ export class MeetingRoom extends BaseEntity {
   name: string;
 
   @Field(() => Number)
-  @Column({ type: Number })
+  @Column({ type: Number, default: 1 })
   reservationIntervalHr: number;
 
   @Field(() => Number)
-  @Column({ type: Number })
-  startTimeHr: Number;
+  @Column({ type: Number, default: 9 })
+  startTimeHr: number;
 
   @Field(() => Number)
-  @Column({ type: Number })
-  endTimeHr: Number;
+  @Column({ type: Number, default: 20 })
+  endTimeHr: number;
 
   @Field(() => [Reservation])
   @OneToMany(() => Reservation, (reservation) => reservation.user)

@@ -7,7 +7,6 @@ import {
   ManyToOne,
   PrimaryColumn,
   Column,
-  Index,
   BaseEntity,
 } from "typeorm";
 import { User } from "./User";
