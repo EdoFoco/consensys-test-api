@@ -1,7 +1,8 @@
 import { MeetingRoomService } from "../../services";
-import { Ctx, Query, UseMiddleware } from "type-graphql";
+import { Query, UseMiddleware } from "type-graphql";
 import { Service } from "typedi";
-import { isAuth, ApiContext } from "../../middleware";
+import { isAuth } from "../../middleware";
+import { MeetingRoomsResponse } from "./MeetingRoomResolver.types";
 
 @Service()
 export class MeetingRoomResolver {
@@ -11,12 +12,10 @@ export class MeetingRoomResolver {
     this.mrService = meetingRoomService;
   }
 
-  @Query(() => String)
+  @Query(() => MeetingRoomsResponse)
   @UseMiddleware(isAuth)
-  async getMeetingRooms(@Ctx() { identity }: ApiContext): Promise<string> {
-    console.log(identity);
+  async getMeetingRooms(): Promise<MeetingRoomsResponse> {
     const meetingRooms = await this.mrService.getMeetingRooms();
-    console.log(meetingRooms);
-    return "hello world";
+    return { meetingRooms };
   }
 }
