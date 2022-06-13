@@ -1,24 +1,21 @@
+import { MeetingRoomService } from "../../services";
 import { Ctx, Query, UseMiddleware } from "type-graphql";
 import { Service } from "typedi";
-import { InjectRepository } from "typeorm-typedi-extensions";
 import { isAuth, ApiContext } from "../../middleware";
-import { MeetingRoomRepository } from "../../repositories";
 
 @Service()
 export class MeetingRoomResolver {
-  private readonly roomRepo: MeetingRoomRepository;
+  private readonly mrService: MeetingRoomService;
 
-  constructor(
-    @InjectRepository()
-    public meetingRoomRepo: MeetingRoomRepository
-  ) {
-    this.roomRepo = meetingRoomRepo;
+  constructor(public meetingRoomService: MeetingRoomService) {
+    this.mrService = meetingRoomService;
   }
+
   @Query(() => String)
   @UseMiddleware(isAuth)
   async getMeetingRooms(@Ctx() { identity }: ApiContext): Promise<string> {
     console.log(identity);
-    const meetingRooms = await this.roomRepo.getMeetingRooms([]);
+    const meetingRooms = await this.mrService.getMeetingRooms();
     console.log(meetingRooms);
     return "hello world";
   }
