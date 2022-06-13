@@ -1,0 +1,21 @@
+version: "3"
+networks:
+  consenys-test:
+
+services:
+  # Backend Db
+  consenys-test-db:
+    image: "postgres:latest"
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: meeting-rooms-db
+    volumes:
+      - consenys-test-db:/var/lib/consenys-test
+    networks:
+      - consenys-test
+
+volumes:
+  consenys-test-db:
