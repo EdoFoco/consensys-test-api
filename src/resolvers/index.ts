@@ -1,2 +1,2 @@
-import { MeetingRoomResolver } from "./MeetingRoomResolver";
+import { MeetingRoomResolver } from "./meeting-room/MeetingRoomResolver";
 export { MeetingRoomResolver };
