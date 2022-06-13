@@ -6,7 +6,11 @@ import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { Container } from "typeorm-typedi-extensions";
 import * as typeorm from "typeorm";
-import { MeetingRoomResolver } from "./resolvers";
+import {
+  MeetingRoomResolver,
+  UserResolver,
+  ReservationResolver,
+} from "./resolvers";
 
 const main = async () => {
   typeorm.useContainer(Container);
@@ -23,7 +27,7 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [MeetingRoomResolver],
+      resolvers: [MeetingRoomResolver, UserResolver, ReservationResolver],
       validate: false,
       container: Container,
     }),

@@ -1,2 +1,5 @@
 import { MeetingRoomService } from "./MeetingRoomService";
-export { MeetingRoomService };
+import { ReservationService } from "./ReservationService";
+import { UserService } from "./UserService";
+
+export { MeetingRoomService, ReservationService, UserService };

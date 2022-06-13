@@ -12,7 +12,7 @@ export class MeetingRoomService {
   ) {
     this.mrRepo = meetingRoomRepository;
   }
-  async getMeetingRooms(relations?: string[]): Promise<MeetingRoom[]> {
-    return await this.mrRepo.getMeetingRooms(relations);
+  async getMeetingRooms(): Promise<MeetingRoom[]> {
+    return await this.mrRepo.getMeetingRooms(["reservations"]);
   }
 }

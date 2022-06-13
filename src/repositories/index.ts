@@ -1,2 +1,5 @@
 import { MeetingRoomRepository } from "./MeetingRoomRepository";
-export { MeetingRoomRepository };
+import { UserRepository } from "./UserRepository";
+import { ReservationRepository } from "./ReservationRepository";
+
+export { MeetingRoomRepository, UserRepository, ReservationRepository };
