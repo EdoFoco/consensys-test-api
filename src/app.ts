@@ -4,10 +4,12 @@ import express from "express";
 import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
-import { MeetingRoomResolver } from "./resolvers";
+import { Container } from "typeorm-typedi-extensions";
 import * as typeorm from "typeorm";
+import { MeetingRoomResolver } from "./resolvers";
 
 const main = async () => {
+  typeorm.useContainer(Container);
   await typeorm.createConnection();
 
   const app = express();
@@ -23,6 +25,7 @@ const main = async () => {
     schema: await buildSchema({
       resolvers: [MeetingRoomResolver],
       validate: false,
+      container: Container,
     }),
     context: ({ req, res }) => ({
       req,
