@@ -1,6 +1,7 @@
 import { UserRepository } from "../repositories";
 import { Service } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
+import { UserInputError } from "apollo-server-express";
 import { Reservation, User } from "../entities";
 
 @Service()
@@ -15,13 +16,29 @@ export class UserService {
   }
 
   async getCurrentUserReservations(authId: string): Promise<Reservation[]> {
-    const user = await this.uRepo.findOrCreateByAuthId(authId, [
-      "reservations",
-    ]);
+    const user = await this.uRepo.getUserByAuthId(authId, ["reservations"]);
+
+    if (!user) throw new UserInputError("Cannot find user");
+
     return user.reservations;
   }
 
   async getOrCreateUserByAuthId(authId: string): Promise<User> {
-    return await this.uRepo.findOrCreateByAuthId(authId, ["reservations"]);
+    let user = await this.uRepo.getUserByAuthId(authId, [
+      "reservations",
+      "reservations.meetingRoom",
+    ]);
+
+    if (!user) {
+      user = await this.uRepo.createUser(authId);
+      user = await this.uRepo.getUserByAuthId(authId, [
+        "reservations",
+        "reservations.meetingRoom",
+      ]);
+    }
+
+    if (!user) throw new UserInputError("Cannot find user");
+
+    return user;
   }
 }
