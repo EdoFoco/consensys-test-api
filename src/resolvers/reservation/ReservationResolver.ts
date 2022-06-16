@@ -28,6 +28,23 @@ export class ReservationResolver {
     return "Done";
   }
 
+  @Mutation(() => String)
+  @UseMiddleware(isAuth)
+  async deleteReservation(
+    @Ctx() { identity }: ApiContext,
+    @Arg("reservationId") reservationId: string
+  ): Promise<string> {
+    const reservations = await this.uService.getCurrentUserReservations(
+      identity.sub
+    );
+    const reservation = reservations.find((r) => r.id === reservationId);
+
+    if (reservation === undefined) throw new ForbiddenError();
+
+    await this.rService.deleteReservation(reservationId);
+    return "Done";
+  }
+
   @Mutation(() => ReservationResponse)
   @UseMiddleware(isAuth)
   async createReservationForCurrentUser(
@@ -35,6 +52,7 @@ export class ReservationResolver {
     @Arg("reservationInput") reservationInput: ReservationInput
   ): Promise<ReservationResponse> {
     const user = await this.uService.getOrCreateUserByAuthId(identity.sub);
+
     if (user.id !== reservationInput.userId) {
       throw new ForbiddenError();
     }

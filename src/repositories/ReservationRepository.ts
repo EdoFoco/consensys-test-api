@@ -9,6 +9,10 @@ export class ReservationRepository extends Repository<Reservation> {
     await this.clear();
   }
 
+  async deleteReservation(id: string): Promise<void> {
+    await this.delete({ id });
+  }
+
   async createReservation(reservation: Reservation): Promise<Reservation> {
     return await this.create(reservation).save();
   }
