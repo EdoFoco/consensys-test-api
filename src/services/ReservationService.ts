@@ -25,12 +25,17 @@ export class ReservationService {
     return await this.rRepo.deleteAllReservations();
   }
 
+  async deleteReservation(id: string): Promise<void> {
+    return await this.rRepo.deleteReservation(id);
+  }
+
   async createReservation(
     reservationInput: ReservationInput,
     existingUserReservations: Reservation[]
   ): Promise<Reservation> {
     const meetingRoom = await this.mrRepo.getMeetingRoomById(
-      reservationInput.meetingRoomId
+      reservationInput.meetingRoomId,
+      ["reservations"]
     );
 
     if (!meetingRoom)
@@ -39,7 +44,7 @@ export class ReservationService {
     /** check if user has already booked a room */
     if (existingUserReservations.length > 0) {
       throw new UserInputError(
-        "Only one reservation at the time. Delete the current reservation and retry."
+        "Only one reservation at a time. Delete the current reservation and retry."
       );
     }
 
