@@ -8,6 +8,7 @@ export class MeetingRoomRepository extends Repository<MeetingRoom> {
   async getMeetingRooms(relations?: string[]): Promise<MeetingRoom[]> {
     return await this.find({
       relations: relations ?? [],
+      order: { name: "ASC" },
     });
   }
 
