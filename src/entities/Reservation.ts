@@ -23,6 +23,7 @@ export class Reservation extends BaseEntity {
   @PrimaryColumn()
   userId: string;
 
+  @Field(() => User)
   @ManyToOne(() => User, (user: User) => user.reservations, {
     onDelete: "CASCADE",
   })

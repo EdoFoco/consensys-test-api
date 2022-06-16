@@ -34,7 +34,7 @@ export class MeetingRoom extends BaseEntity {
   endTimeHr: number;
 
   @Field(() => [Reservation])
-  @OneToMany(() => Reservation, (reservation) => reservation.user)
+  @OneToMany(() => Reservation, (reservation) => reservation.meetingRoom)
   reservations: Reservation[];
 
   @Field(() => String)
