@@ -3,3 +3,4 @@ api:
     - api ci
   script:
     - echo Hello World
+    - echo test
