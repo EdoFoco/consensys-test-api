@@ -1,6 +1,5 @@
-api:
+server:
   tags:
-    - api ci
+    - ci
   script:
     - echo Hello World
-    - echo test
