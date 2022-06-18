@@ -66,6 +66,6 @@ deploy:
     - docker build -t $APP_NAME .
     - docker tag $APP_NAME:latest $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
     - docker push $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
-    - envsubst < infrastructure/aws/5_task-definition.yml > task-definition.staging.yml
-    - cat task-definition.staging.yml
-    - aws ecs register-task-definition --cli-input-json task-definition.staging.yml --region $AWS_DEFAULT_REGION
+    - envsubst < infrastructure/aws/5_task-definition.json > task-definition.staging.json
+    - cat task-definition.staging.json
+    - aws ecs register-task-definition --cli-input-json task-definition.staging.json --region $AWS_DEFAULT_REGION
