@@ -50,11 +50,10 @@ deploy:
   dependencies:
     - build
   before_script:
-    - apk add --no-cache curl jq python3 py3-pip
+    - apk add --no-cache curl jq python3 py3-pip gettext
     - pip install awscli
     - echo $ECR_REGISTRY
     - echo $APP_NAME
-    - ls
     - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
     - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
     - aws configure set region $AWS_DEFAULT_REGION
@@ -66,3 +65,5 @@ deploy:
     - docker build -t $APP_NAME .
     - docker tag $APP_NAME:latest $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
     - docker push $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
+    - envsubst < infrastructure/aws/5_task-definition.yml > task-definition.staging.yml
+    - cat task-definition.staging.yml
