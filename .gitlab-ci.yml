@@ -7,9 +7,9 @@ variables:
   ECR_REGISTRY: $ECR_REGISTRY
 
 stages:
-  # - build
+  - build
   # - test
-  - publish
+  # - publish
 
 # build:
 #   stage: build
@@ -41,7 +41,7 @@ stages:
 #         path: coverage/cobertura-coverage.xml
 
 publish:
-  stage: .post
+  stage: build
   image:
     name: docker:latest
   services:
