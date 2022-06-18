@@ -9,37 +9,37 @@ variables:
 
 stages:
   - build
-  # - test
-  # - publish
+  - test
+  - publish
 
-# build:
-#   stage: build
-#   script:
-#     - npm install
-#     - npm run build
-#   cache:
-#     paths:
-#       - node_modules/
-#   artifacts:
-#     expire_in: 1 days
-#     when: on_success
-#     paths:
-#       - node_modules/
-#       - dist/
+build:
+  stage: build
+  script:
+    - npm install
+    - npm run build
+  cache:
+    paths:
+      - node_modules/
+  artifacts:
+    expire_in: 1 days
+    when: on_success
+    paths:
+      - node_modules/
+      - dist/
 
-# test:
-#   stage: test
-#   coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
-#   dependencies:
-#     - build
-#   script:
-#     - npm run test:cover
-#   artifacts:
-#     when: always
-#     reports:
-#       coverage_report:
-#         coverage_format: cobertura
-#         path: coverage/cobertura-coverage.xml
+test:
+  stage: test
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+  dependencies:
+    - build
+  script:
+    - npm run test:cover
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
 
 publish:
   stage: build
