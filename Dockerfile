@@ -18,5 +18,4 @@ RUN npm install --omit=dev
 
 COPY ./dist ./dist
 
-COPY .env .
 CMD node dist/app.js
