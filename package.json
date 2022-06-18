@@ -8,7 +8,7 @@
     "start": "ts-node src/app.ts",
     "test": "jest",
     "test:cover": "jest --coverage",
-    "test:ci": "jest --config ./jest.config.js --collectCoverage --coverageDirectory=\"./coverage\" --ci --reporters=default --reporters=jest-junit --watchAll=false",
+    "test:ci": "jest --config ./jest.config.ts --collectCoverage --coverageDirectory=\"./coverage\" --ci --reporters=default --watchAll=false",
     "build": "rm -rf ./dist && tsc --project tsconfig.build.json",
     "migration:generate": "npm run build && typeorm -f migrationsormconfig.js migration:generate",
     "migration:run": "npm run build && typeorm -f migrationsormconfig.js migration:run",
