@@ -23,6 +23,7 @@ build:
     when: on_success
     paths:
       - node_modules/
+      - dist/
 
 test:
   stage: test
@@ -37,20 +38,19 @@ test:
       coverage_report:
         coverage_format: cobertura
         path: coverage/cobertura-coverage.xml
-
-publish:
-  stage: .post
-  image:
-    name: docker:latest
-  services:
-    - docker:19-dind
-  before_script:
-    - apk add --no-cache curl jq python3 py3-pip
-    - pip install awscli
-    - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REGISTRY
-    - aws --version
-    - docker info
-    - docker --version
-  script:
-    - docker build -t $ECR_REGISTRY:$CI_PIPELINE_IID .
-    - docker push $ECR_REGISTRY:$CI_PIPELINE_IID
+# publish:
+#   stage: .post
+#   image:
+#     name: docker:latest
+#   services:
+#     - docker:19-dind
+#   before_script:
+#     - apk add --no-cache curl jq python3 py3-pip
+#     - pip install awscli
+#     - aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REGISTRY
+#     - aws --version
+#     - docker info
+#     - docker --version
+#   script:
+#     - docker build -t $ECR_REGISTRY:$CI_PIPELINE_IID .
+#     - docker push $ECR_REGISTRY:$CI_PIPELINE_IID
