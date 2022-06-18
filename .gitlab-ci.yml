@@ -42,7 +42,7 @@ test:
         path: coverage/cobertura-coverage.xml
 
 publish:
-  stage: build
+  stage: .post
   image:
     name: docker:latest
   services:
