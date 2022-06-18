@@ -17,5 +17,26 @@ services:
     networks:
       - consenys-test
 
+  # Backend
+  backend:
+    build:
+      context: ../
+      dockerfile: Dockerfile
+    depends_on:
+      - consenys-test-db
+    networks:
+      - consenys-test
+    environment:
+      - CORS_ORIGIN=*
+      - PORT=80
+      - DB_HOST=consenys-test-db
+      - DB_USERNAME=username
+      - DB_PASSWORD=password
+      - DB_NAME=meeting-rooms-db
+      - JWT_AUDIENCE=localhost:3001
+      - JWT_JWKS_URL=https://edoardo-foco.eu.auth0.com/.well-known/jwks.json
+      - JWT_ISSUER=https://edoardo-foco.eu.auth0.com/
+    ports:
+      - 80:80
 volumes:
   consenys-test-db:

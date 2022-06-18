@@ -8,7 +8,7 @@ module.exports = {
   synchronize: false,
   migrationsRun: true,
   dropSchema: false,
-  entities: ["src/entities/*.ts"],
-  migrations: ["src/db/migrations/*.ts"],
+  entities: ["src/entities/*.ts", "dist/entities/*.js"],
+  migrations: ["src/db/migrations/*.ts", "dist/migrations/*.js"],
   seeds: ["src/db/seeding/seeder.ts"],
 };

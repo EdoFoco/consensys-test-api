@@ -22,8 +22,8 @@
     "apollo-server-express": "^3.8.2",
     "cors": "^2.8.5",
     "dotenv": "^16.0.1",
-    "dotenv-safe": "^8.2.0",
     "express": "^4.18.1",
+    "jsonwebtoken": "^8.5.1",
     "jwks-rsa": "^2.1.4",
     "pg": "^8.7.3",
     "ts-node": "^10.8.1",
@@ -42,7 +42,6 @@
     "@typescript-eslint/parser": "^5.28.0",
     "eslint": "^8.18.0",
     "jest": "^28.1.1",
-    "jsonwebtoken": "^8.5.1",
     "moq.ts": "^9.0.2",
     "ts-jest": "^28.0.4",
     "ts-node-dev": "^2.0.0"
