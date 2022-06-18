@@ -5,6 +5,7 @@ variables:
   AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
   ECR_REGISTRY: $ECR_REGISTRY
   AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  APP_NAME: $APP_NAME
 
 stages:
   - build
@@ -49,10 +50,8 @@ publish:
   before_script:
     - apk add --no-cache curl jq python3 py3-pip
     - pip install awscli
-    - echo $AWS_DEFAULT_REGION
-    - echo $AWS_ACCESS_KEY_ID
-    - echo $AWS_SECRET_ACCESS_KEY
-    - echo hello
+    - echo $ECR_REGISTRY
+    - echo $APP_NAME
     - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
     - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
     - aws configure set region $AWS_DEFAULT_REGION
@@ -62,5 +61,5 @@ publish:
     - docker info
     - docker --version
   script:
-    - docker build -t $ECR_REGISTRY:$CI_PIPELINE_IID .
-    - docker push $ECR_REGISTRY:$CI_PIPELINE_IID
+    - docker build -t $APP_NAME:$CI_PIPELINE_IID .
+    - docker push $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
