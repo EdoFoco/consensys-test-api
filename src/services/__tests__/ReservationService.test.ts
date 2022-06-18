@@ -19,7 +19,7 @@ describe("ReservationService - createReservation() - ", () => {
   it("should throw invalid user input error if meeting room not found", async () => {
     // Arrange
     const mockedMrRepo = mrRepoMock
-      .setup((i) => i.getMeetingRoomById("123", It.IsAny<String[]>()))
+      .setup((i) => i.getMeetingRoomById("123", It.IsAny<string[]>()))
       .returnsAsync(void null)
       .object();
 
@@ -42,7 +42,7 @@ describe("ReservationService - createReservation() - ", () => {
       ).toBe(true);
 
       mrRepoMock.verify(
-        (i) => i.getMeetingRoomById("123", It.IsAny<String[]>()),
+        (i) => i.getMeetingRoomById("123", It.IsAny<string[]>()),
         Times.Once()
       );
       reservationRepoMock.verify(
@@ -58,7 +58,7 @@ describe("ReservationService - createReservation() - ", () => {
     meetingRoom.id = "123";
 
     const mockedMrRepo = mrRepoMock
-      .setup((i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<String[]>()))
+      .setup((i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<string[]>()))
       .returnsAsync(meetingRoom)
       .object();
 
@@ -81,7 +81,7 @@ describe("ReservationService - createReservation() - ", () => {
       expect(ex.extensions.code).toBe("BAD_USER_INPUT");
 
       mrRepoMock.verify(
-        (i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<String[]>()),
+        (i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<string[]>()),
         Times.Once()
       );
       reservationRepoMock.verify(
@@ -101,7 +101,7 @@ describe("ReservationService - createReservation() - ", () => {
     meetingRoom.reservationIntervalHr = 1;
 
     const mockedMrRepo = mrRepoMock
-      .setup((i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<String[]>()))
+      .setup((i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<string[]>()))
       .returnsAsync(meetingRoom)
       .object();
 
@@ -124,7 +124,7 @@ describe("ReservationService - createReservation() - ", () => {
       expect(ex.extensions.code).toBe("BAD_USER_INPUT");
 
       mrRepoMock.verify(
-        (i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<String[]>()),
+        (i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<string[]>()),
         Times.Once()
       );
       reservationRepoMock.verify(
@@ -144,7 +144,7 @@ describe("ReservationService - createReservation() - ", () => {
     meetingRoom.reservationIntervalHr = 1;
 
     const mockedMrRepo = mrRepoMock
-      .setup((i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<String[]>()))
+      .setup((i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<string[]>()))
       .returnsAsync(meetingRoom)
       .object();
 
@@ -170,7 +170,7 @@ describe("ReservationService - createReservation() - ", () => {
       expect(ex.extensions.code).toBe("BAD_USER_INPUT");
 
       mrRepoMock.verify(
-        (i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<String[]>()),
+        (i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<string[]>()),
         Times.Once()
       );
       reservationRepoMock.verify(
@@ -190,7 +190,7 @@ describe("ReservationService - createReservation() - ", () => {
     meetingRoom.reservationIntervalHr = 1;
 
     const mockedMrRepo = mrRepoMock
-      .setup((i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<String[]>()))
+      .setup((i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<string[]>()))
       .returnsAsync(meetingRoom)
       .object();
 
@@ -212,7 +212,7 @@ describe("ReservationService - createReservation() - ", () => {
 
     // Assert
     mrRepoMock.verify(
-      (i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<String[]>()),
+      (i) => i.getMeetingRoomById(meetingRoom.id, It.IsAny<string[]>()),
       Times.Once()
     );
     reservationRepoMock.verify(
