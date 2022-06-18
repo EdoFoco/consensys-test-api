@@ -10,7 +10,7 @@ variables:
 stages:
   - build
   - test
-  - publish
+  - deploy
 
 build:
   stage: build
@@ -41,8 +41,8 @@ test:
         coverage_format: cobertura
         path: coverage/cobertura-coverage.xml
 
-publish:
-  stage: .post
+deploy:
+  stage: deploy
   image:
     name: docker:latest
   services:
