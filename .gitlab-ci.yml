@@ -6,6 +6,14 @@ variables:
   ECR_REGISTRY: $ECR_REGISTRY
   AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
   APP_NAME: $APP_NAME
+  SERVICE_NAME: $APP_NAME
+  DB_HOST_STAGING: $DB_HOST_STAGING
+  DB_USERNAME_STAGING: $DB_USERNAME_STAGING
+  DB_PASSWORD_STAGING: $DB_PASSWORD_STAGING
+  DB_NAME_STAGING: $DB_NAME_STAGING
+  JWT_AUDIENCE_STAGING: $JWT_AUDIENCE_STAGING
+  JWT_JWKS_URL_STAGING: $JWT_JWKS_URL_STAGING
+  JWT_ISSUER_STAGING: $JWT_ISSUER_STAGING
 
 stages:
   - build
@@ -44,6 +52,16 @@ test:
 
 deploy:
   stage: deploy
+  variables:
+    ENV: staging
+    STACK_NAME: consensys-test-$SERVICE_NAME-service-${ENV}
+    DB_HOST: $DB_HOST_STAGING
+    DB_USERNAME: $DB_USERNAME_STAGING
+    DB_PASSWORD: $DB_PASSWORD_STAGING
+    DB_NAME: $DB_NAME_STAGING
+    JWT_AUDIENCE: $JWT_AUDIENCE_STAGING
+    JWT_JWKS_URL: $JWT_JWKS_URL_STAGING
+    JWT_ISSUER: $JWT_ISSUER_STAGING
   image:
     name: docker:latest
   services:
@@ -66,6 +84,8 @@ deploy:
     - docker build -t $APP_NAME .
     - docker tag $APP_NAME:latest $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
     - docker push $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
-    - envsubst < infrastructure/aws/5_task-definition.json > task-definition.staging.json
-    - cat task-definition.staging.json
-    - aws ecs register-task-definition --cli-input-json task-definition.staging.json --region $AWS_DEFAULT_REGION
+    - export IMAGE=$ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
+    - envsubst < infrastructure/aws/5_task-definition.yml > task-definition.staging.yml
+    - cat task-definition.staging.yml
+    - bash deploh.sh
+    # - aws ecs register-task-definition --cli-input-json task-definition.staging.yml --region $AWS_DEFAULT_REGION

@@ -1,0 +1,199 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Consensys Test API Service - AWS Fargate deployment, hosted in a private subnet, behind a public load balancer.
+Resources:
+  # Service
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: "${SERVICE_NAME}-${ENV}"
+      Cluster:
+        Fn::ImportValue: "${ENV}:ClusterName"
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 75
+      DesiredCount: 1
+      ServiceRegistries:
+        - RegistryArn:
+            Fn::ImportValue: "${ENV}:${SERVICE_NAME}InternalLocalNamespace"
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - Fn::ImportValue: "${ENV}:ECSClusterSecurityGroup"
+          Subnets:
+            - Fn::ImportValue: "${ENV}:PrivateSubnetOne"
+            - Fn::ImportValue: "${ENV}:PrivateSubnetTwo"
+      TaskDefinition: !Ref "TaskDefinition"
+      LoadBalancers:
+        - ContainerName: "${SERVICE_NAME}-${ENV}"
+          ContainerPort: 80
+          TargetGroupArn:
+            Fn::ImportValue: "${ENV}:apiServiceTargetGroup"
+
+  TaskDefinition:
+    Type: AWS::ECS::TaskDefinition
+    Properties:
+      Family: "${SERVICE_NAME}-${ENV}"
+      Cpu: 256
+      Memory: 512
+      NetworkMode: awsvpc
+      RequiresCompatibilities:
+        - FARGATE
+      ExecutionRoleArn:
+        Fn::ImportValue: "${ENV}:ECSTaskExecutionRole"
+      TaskRoleArn:
+        Fn::ImportValue: "${ENV}:apiTaskRole"
+      ContainerDefinitions:
+        - Name: "${SERVICE_NAME}-${ENV}"
+          Cpu: ${TASK_CPU}
+          Memory: ${TASK_MEMORY}
+          Image: "${IMAGE_NAME}"
+          PortMappings:
+            - ContainerPort: 80
+          LogConfiguration:
+            LogDriver: "awslogs"
+            Options:
+              awslogs-group: "${SERVICE_NAME}-${ENV}"
+              awslogs-region: "${AWS_DEFAULT_REGION}"
+              awslogs-stream-prefix: "${SERVICE_NAME}-${ENV}"
+          Environment:
+            - Name: "CORS_ORIGIN"
+              Value: "*"
+              Name: "PORT"
+              Value: "80"
+              Name: "DB_HOST"
+              Value: "${DB_HOST}"
+              Name: "DB_USERNAME"
+              Value: "${DB_USERNAME}"
+              Name: "DB_PASSWORD"
+              Value: "${DB_PASSWORD}"
+              Name: "DB_NAME"
+              Value: "${DB_NAME}"
+              Name: "JWT_AUDIENCE"
+              Value: "${JWT_AUDIENCE}"
+              Name: "JWT_JWKS_URL"
+              Value: "${JWT_JWKS_URL}"
+              Name: "JWT_ISSUER"
+              Value: "${JWT_ISSUER}"
+
+
+  # Autoscaling
+  ScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: Service
+    Properties:
+      ServiceNamespace: "ecs"
+      ScalableDimension: "ecs:service:DesiredCount"
+      ResourceId:
+        Fn::Join:
+          - "/"
+          - - service
+            - Fn::ImportValue: ${ENV}:ECSClusterName
+            - ${SERVICE_NAME}-${ENV}
+      MinCapacity: 1
+      MaxCapacity: 5
+      RoleARN:
+        Fn::ImportValue: ${ENV}:AutoscalingRole
+
+  # Create scaling policies that describe how to scale the service up and down.
+  ScaleDownPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: ScalableTarget
+    Properties:
+      PolicyName: scale-${SERVICE_NAME}-${ENV}-down
+      PolicyType: StepScaling
+      ResourceId:
+        Fn::Join:
+          - "/"
+          - - service
+            - Fn::ImportValue: ${ENV}:ECSClusterName
+            - ${SERVICE_NAME}-${ENV}
+      ScalableDimension: "ecs:service:DesiredCount"
+      ServiceNamespace: "ecs"
+      StepScalingPolicyConfiguration:
+        AdjustmentType: "ChangeInCapacity"
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+        MetricAggregationType: "Average"
+        Cooldown: 60
+
+  ScaleUpPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: ScalableTarget
+    Properties:
+      PolicyName: scale-${SERVICE_NAME}-${ENV}-up
+      PolicyType: StepScaling
+      ResourceId:
+        Fn::Join:
+          - "/"
+          - - service
+            - Fn::ImportValue: ${ENV}:ECSClusterName
+            - ${SERVICE_NAME}-${ENV}
+      ScalableDimension: "ecs:service:DesiredCount"
+      ServiceNamespace: "ecs"
+      StepScalingPolicyConfiguration:
+        AdjustmentType: "ChangeInCapacity"
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 15
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 15
+            MetricIntervalUpperBound: 25
+            ScalingAdjustment: 2
+          - MetricIntervalLowerBound: 25
+            ScalingAdjustment: 3
+        MetricAggregationType: "Average"
+        Cooldown: 60
+
+  # Create alarms to trigger the scaling policies
+  LowCpuUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: low-cpu-${SERVICE_NAME}-${ENV}
+      AlarmDescription: "Low CPU utilization for service ${SERVICE_NAME}-${ENV}"
+      MetricName: CPUUtilization
+      Namespace: AWS/ECS
+      Dimensions:
+        - Name: ServiceName
+          Value: ${SERVICE_NAME}-${ENV}
+        - Name: ClusterName
+          Value:
+            Fn::ImportValue: ${ENV}:ECSClusterName
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 20
+      ComparisonOperator: LessThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref ScaleDownPolicy
+
+  HighCpuUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: high-cpu-${SERVICE_NAME}-${ENV}
+      AlarmDescription: "High CPU utilization for service ${SERVICE_NAME}-${ENV}"
+      MetricName: CPUUtilization
+      Namespace: AWS/ECS
+      Dimensions:
+        - Name: ServiceName
+          Value: ${SERVICE_NAME}-${ENV}
+        - Name: ClusterName
+          Value:
+            Fn::ImportValue: ${ENV}:ECSClusterName
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 40
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref ScaleUpPolicy
+
+  LogsForwardingSubscription:
+    Type: AWS::Logs::SubscriptionFilter
+    DependsOn: TaskDefinition
+    Properties:
+      DestinationArn:
+        Fn::ImportValue: ${ENV}:LogsImporterLambdaArn
+      LogGroupName: "${SERVICE_NAME}-${ENV}"
+      FilterPattern: " "
