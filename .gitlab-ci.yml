@@ -24,7 +24,7 @@ test:
   dependencies:
     - build
   script:
-    - yarn test:ci
+    - npm run test:ci
   artifacts:
     when: always
     reports:

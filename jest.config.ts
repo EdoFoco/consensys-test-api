@@ -5,7 +5,7 @@ const config: Config.InitialOptions = {
   transform: {
     "^.+\\.tsx?$": "ts-jest",
   },
-  collectCoverageFrom: ["src/**/*.js", "!**/node_modules/**"],
+  collectCoverageFrom: ["src/**/*.ts", "!**/node_modules/**"],
   coverageReporters: ["html", "text", "text-summary", "cobertura"],
 };
 
