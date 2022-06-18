@@ -3,6 +3,7 @@ image: node:latest
 stages:
   - build
   - test
+  - publish
 
 build:
   stage: build
@@ -17,6 +18,7 @@ build:
     when: on_success
     paths:
       - node_modules/
+      - dist/
 
 test:
   stage: test
