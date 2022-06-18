@@ -26,6 +26,7 @@ build:
     paths:
       - node_modules/
       - dist/
+      - infrastructure/
 
 test:
   stage: test
@@ -67,3 +68,4 @@ deploy:
     - docker push $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
     - envsubst < infrastructure/aws/5_task-definition.yml > task-definition.staging.yml
     - cat task-definition.staging.yml
+    - aws ecs register-task-definition --cli-input-json task-definition.staging.yml --region $AWS_DEFAULT_REGION
