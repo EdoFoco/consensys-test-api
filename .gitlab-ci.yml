@@ -64,4 +64,4 @@ deploy:
     - docker --version
   script:
     - docker build -t $APP_NAME:$CI_PIPELINE_IID .
-    - docker push $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
+    - docker push $APP_NAME:$CI_PIPELINE_IID
