@@ -7,7 +7,7 @@
     "dev": "ts-node-dev --respawn -- src/app.ts",
     "start": "ts-node src/app.ts",
     "test": "jest",
-    "test:dover": "jest --config ./jest.config.ts --collectCoverage --coverageDirectory=\"./coverage\" --ci --reporters=default --watchAll=false",
+    "test:cover": "jest --config ./jest.config.ts --collectCoverage --coverageDirectory=\"./coverage\" --ci --reporters=default --watchAll=false",
     "build": "rm -rf ./dist && tsc --project tsconfig.build.json",
     "lint": "eslint . --ext .ts",
     "migration:generate": "npm run build && typeorm -f migrationsormconfig.js migration:generate",
