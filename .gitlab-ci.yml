@@ -7,24 +7,24 @@ variables:
   ECR_REGISTRY: $ECR_REGISTRY
 
 stages:
-  - build
+  # - build
   # - test
   - publish
 
-build:
-  stage: build
-  script:
-    - npm install
-    - npm run build
-  cache:
-    paths:
-      - node_modules/
-  artifacts:
-    expire_in: 1 days
-    when: on_success
-    paths:
-      - node_modules/
-      - dist/
+# build:
+#   stage: build
+#   script:
+#     - npm install
+#     - npm run build
+#   cache:
+#     paths:
+#       - node_modules/
+#   artifacts:
+#     expire_in: 1 days
+#     when: on_success
+#     paths:
+#       - node_modules/
+#       - dist/
 
 # test:
 #   stage: test
