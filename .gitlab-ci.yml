@@ -7,7 +7,7 @@ stages:
 build:
   stage: build
   script:
-    - yarn
+    - npm run build
   cache:
     paths:
       - node_modules/
@@ -27,6 +27,6 @@ test:
   artifacts:
     when: always
     reports:
-      junit:
-        - junit.xml
-      cobertura: coverage/cobertura-coverage.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
