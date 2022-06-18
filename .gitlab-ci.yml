@@ -63,5 +63,6 @@ deploy:
     - docker info
     - docker --version
   script:
-    - docker build -t $APP_NAME:$CI_PIPELINE_IID .
-    - docker push $APP_NAME:$CI_PIPELINE_IID
+    - docker build -t $APP_NAME .
+    - docker tag $APP_NAME:$CI_PIPELINE_IID $ECR_REPOSTIORY/$APP_NAME:$CI_PIPELINE_IID
+    - docker push $ECR_REPOSTIORY/$APP_NAME:$CI_PIPELINE_IID
