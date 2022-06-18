@@ -1,9 +1,4 @@
 image: node:latest
-variables:
-  AWS_DEFAULT_REGION: eu-west-1
-  DOCKER_HOST: tcp://docker:2375
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
 
 stages:
   - build
@@ -13,7 +8,6 @@ build:
   stage: build
   script:
     - npm install
-    - npm run lint
     - npm run build
   cache:
     paths:
@@ -23,7 +17,6 @@ build:
     when: on_success
     paths:
       - node_modules/
-      - dist/
 
 test:
   stage: test
