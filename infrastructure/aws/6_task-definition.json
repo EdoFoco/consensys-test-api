@@ -4,8 +4,8 @@
   "memory": "512",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "executionRole": "arn:aws:iam::593263191272:role/consensys-test-ecs-staging-ECSTaskExecutionRole-NLCVHBZNJODD",
-  "taskRole": "arn:aws:iam::593263191272:role/consensy-test-api-base-staging-TaskRole-1V9VQW93UYG2O",
+  "executionRoleArn": { "Fn::Sub": "${ENV}:ECSTaskExecutionRole" },
+  "taskRoleArn": { "Fn::Sub": "${ENV}:apiTaskRole" },
   "containerDefinitions": [
     {
       "name": "${SERVICE_NAME}-${ENV}",
@@ -18,7 +18,7 @@
         }
       ],
       "logConfiguration": {
-        "logDriver": "awsLogs",
+        "logDriver": "awslogs",
         "options": {
           "awslogs-group": "${SERVICE_NAME}-${ENV}",
           "awslogs-region": "${AWS_DEFAULT_REGION}",

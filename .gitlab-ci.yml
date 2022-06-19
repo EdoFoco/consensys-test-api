@@ -90,4 +90,4 @@ deploy:
     - export IMAGE=$ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
     - envsubst < infrastructure/aws/6_task-definition.json > task-definition.staging.json
     - cat task-definition.staging.json
-    - aws ecs register-task-definition --cli-input-json file://task-definition.staging.json --region $AWS_DEFAULT_REGION
+    - aws ecs register-task-definition --cli-input-json file://task-definition.staging.json --region \$AWS_DEFAULT_REGION
