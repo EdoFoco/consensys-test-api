@@ -1,14 +1,14 @@
 {
-  "family": "${SERVICE_NAME}-${ENV_NAME}",
+  "family": "${SERVICE_NAME}-${ENV}",
   "cpu": "256",
   "memory": "512",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "executionRole": { "Fn::Sub": "${ENV_NAME}:ECSTaskExecutionRole" },
-  "taskRole": { "Fn::Sub": "${ENV_NAME}:apiTaskRole" },
+  "executionRole": { "Fn::Sub": "${ENV}:ECSTaskExecutionRole" },
+  "taskRole": { "Fn::Sub": "${ENV}:apiTaskRole" },
   "containerDefinitions": [
     {
-      "name": "${SERVICE_NAME}-${ENV_NAME}",
+      "name": "${SERVICE_NAME}-${ENV}",
       "image": "${IMAGE}",
       "portMappings": [
         {
@@ -20,9 +20,9 @@
       "logConfiguration": {
         "logDriver": "awsLogs",
         "options": {
-          "awslogs-group": "${SERVICE_NAME}-${ENV_NAME}",
+          "awslogs-group": "${SERVICE_NAME}-${ENV}",
           "awslogs-region": "${AWS_DEFAULT_REGION}",
-          "awslogs-stream-prefix": "${SERVICE_NAME}-${ENV_NAME}"
+          "awslogs-stream-prefix": "${SERVICE_NAME}-${ENV}"
         }
       },
       "environment": [
