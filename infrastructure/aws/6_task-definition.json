@@ -4,8 +4,8 @@
   "memory": "512",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "executionRole": { "Fn::Sub": "${ENV}:ECSTaskExecutionRole" },
-  "taskRole": { "Fn::Sub": "${ENV}:apiTaskRole" },
+  "executionRole": "arn:aws:iam::593263191272:role/consensys-test-ecs-staging-ECSTaskExecutionRole-NLCVHBZNJODD",
+  "taskRole": "arn:aws:iam::593263191272:role/consensy-test-api-base-staging-TaskRole-1V9VQW93UYG2O",
   "containerDefinitions": [
     {
       "name": "${SERVICE_NAME}-${ENV}",
