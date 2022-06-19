@@ -4,8 +4,8 @@
   "memory": "512",
   "networkMode": "awsvpc",
   "requiresCompatibilities": ["FARGATE"],
-  "executionRole": "${ENV_NAME}:ECSTaskExecutionRole",
-  "taskRole": "${ENV_NAME}:apiTaskRole",
+  "executionRole": { "Fn::Sub": "${ENV_NAME}:ECSTaskExecutionRole" },
+  "taskRole": { "Fn::Sub": "${ENV_NAME}:apiTaskRole" },
   "containerDefinitions": [
     {
       "name": "${SERVICE_NAME}-${ENV_NAME}",
