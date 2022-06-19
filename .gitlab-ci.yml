@@ -88,5 +88,5 @@ deploy:
     - docker push $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
     - export IMAGE=$ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
     - envsubst < infrastructure/aws/6_task-definition.json > task-definition.staging.json
-    - cat task-definition.staging.yml
-    - aws ecs register-task-definition --cli-input-json task-definition.staging.yml --region $AWS_DEFAULT_REGION
+    - cat task-definition.staging.json
+    - aws ecs register-task-definition --cli-input-json task-definition.staging.json --region $AWS_DEFAULT_REGION
