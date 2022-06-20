@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Global security groups.
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: base
+    Description: "Environment name (e.g. base, staging, production)"
+
+Resources:
+  # OpenVpn
+  OpenVpnSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      GroupDescription: "Security group to allow traffic to Open Vpn from anywhere"
+      GroupName: !Sub open-vpn-sg-${EnvironmentName}
+      SecurityGroupEgress:
+        - IpProtocol: tcp
+          FromPort: 0
+          ToPort: 65535
+          CidrIp: 0.0.0.0/0
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 943
+          ToPort: 943
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: udp
+          FromPort: 1194
+          ToPort: 1194
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: "Name"
+          Value: !Sub open-vpn-sg-${EnvironmentName}
+
+Outputs:
+  OpenVpnSG:
+    Description: Security group for OpenVPN
+    Value: !Ref "OpenVpnSG"
+    Export:
+      Name: !Sub ${EnvironmentName}:OpenVpnSG
