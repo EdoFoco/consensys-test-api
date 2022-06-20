@@ -95,3 +95,5 @@ deploy:
     - envsubst < infrastructure/aws/6_task-definition.json > task-definition.staging.json
     - cat task-definition.staging.json
     - aws ecs register-task-definition --cli-input-json file://task-definition.staging.json
+    - aws ecs update-service --cluster consensys-ecs-$ENV --service $SERVICE_NAME-$ENV --task-definition ${SERVICE_NAME}-${ENV}
+
