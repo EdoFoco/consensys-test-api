@@ -24,6 +24,7 @@ stages:
 
 build:
   stage: build
+  environment: staging
   script:
     - npm install
     - npm run build
@@ -40,6 +41,7 @@ build:
 
 test:
   stage: test
+  environment: staging
   coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
   dependencies:
     - build
@@ -54,6 +56,7 @@ test:
 
 deploy:
   stage: deploy
+  environment: staging
   variables:
     ENV: staging
     STACK_NAME: consensys-test-$SERVICE_NAME-service-${ENV}
