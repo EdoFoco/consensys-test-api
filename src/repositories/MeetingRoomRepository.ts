@@ -18,4 +18,14 @@ export class MeetingRoomRepository extends Repository<MeetingRoom> {
   ): Promise<MeetingRoom | undefined> {
     return await this.findOne({ where: { id }, relations: relations ?? [] });
   }
+
+  async createBulkMeetingRooms(
+    meetingRooms: MeetingRoom[]
+  ): Promise<MeetingRoom[] | undefined> {
+    return await this.save(meetingRooms);
+  }
+
+  async deleteAll(): Promise<void> {
+    await this.query("truncate meeting_room cascade");
+  }
 }
