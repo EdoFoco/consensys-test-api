@@ -38,14 +38,14 @@ build:
       - dist/
       - infrastructure/
 
-# test:
-#   stage: test
-#   coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
-#   dependencies:
-#     - build
-#   script:
-#     - npm run test:cover
-#   artifacts:
+test:
+  stage: test
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+  dependencies:
+    - build
+  script:
+    - npm run test:cover
+  artifacts:
     when: always
     reports:
       coverage_report:
@@ -96,4 +96,3 @@ deploy:
     - cat task-definition.staging.json
     - aws ecs register-task-definition --cli-input-json file://task-definition.staging.json
     - aws ecs update-service --cluster consensys-ecs-$ENV --service $SERVICE_NAME-$ENV --task-definition ${SERVICE_NAME}-${ENV}
-
