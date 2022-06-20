@@ -91,7 +91,6 @@ deploy:
     - docker build -t $APP_NAME .
     - docker tag $APP_NAME:latest $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
     - docker push $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
-    - export IMAGE=$ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
     - envsubst < infrastructure/aws/6_task-definition.json > task-definition.staging.json
     - cat task-definition.staging.json
     - aws ecs register-task-definition --cli-input-json file://task-definition.staging.json
