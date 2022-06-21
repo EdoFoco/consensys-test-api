@@ -12,8 +12,9 @@ import {
   ReservationResolver,
 } from "./resolvers";
 
+typeorm.useContainer(Container);
+
 const main = async () => {
-  typeorm.useContainer(Container);
   await typeorm.createConnection();
 
   const app = express();
