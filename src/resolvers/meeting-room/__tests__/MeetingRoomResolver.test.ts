@@ -27,3 +27,27 @@ describe("MeetingRoomResolver - getMeetingRooms() - ", () => {
     expect(response.meetingRooms.length).toBe(1);
   });
 });
+
+describe("MeetingRoomResolver - resetMeetingRooms() - ", () => {
+  let mrServiceMock: Mock<MeetingRoomService>;
+
+  beforeEach(() => {
+    mrServiceMock = new Mock<MeetingRoomService>();
+  });
+
+  it("should reset meeting rroms", async () => {
+    // Arrange
+    const mockedService = mrServiceMock
+      .setup((i) => i.resetMeetingRooms())
+      .returnsAsync(void null)
+      .object();
+
+    const sut = new MeetingRoomResolver(mockedService);
+
+    // Act
+    await sut.resetMeetingRooms();
+
+    // Assert
+    mrServiceMock.verify((i) => i.resetMeetingRooms(), Times.Once());
+  });
+});

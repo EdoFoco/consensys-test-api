@@ -166,7 +166,6 @@ describe("ReservationService - createReservation() - ", () => {
     } catch (e) {
       // Assert
       const ex = e as UserInputError;
-      console.log(ex);
       expect(ex.extensions.code).toBe("BAD_USER_INPUT");
 
       mrRepoMock.verify(

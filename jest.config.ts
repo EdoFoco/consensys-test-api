@@ -5,6 +5,14 @@ const config: Config.InitialOptions = {
   transform: {
     "^.+\\.tsx?$": "ts-jest",
   },
+  coveragePathIgnorePatterns: [
+    "app.ts",
+    "migrations/*",
+    "seeding/*",
+    "entities/*",
+    "repositories/*",
+    ".types.ts",
+  ],
   collectCoverageFrom: ["src/**/*.ts", "!**/node_modules/**"],
   coverageReporters: ["html", "text", "text-summary", "cobertura"],
 };

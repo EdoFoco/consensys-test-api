@@ -1,7 +1,7 @@
 import { UserRepository } from "../repositories";
 import { Service } from "typedi";
 import { InjectRepository } from "typeorm-typedi-extensions";
-import { UserInputError } from "apollo-server-express";
+import { EntityNotFoundError } from "typeorm";
 import { Reservation, User } from "../entities";
 
 @Service()
@@ -18,7 +18,7 @@ export class UserService {
   async getCurrentUserReservations(authId: string): Promise<Reservation[]> {
     const user = await this.uRepo.getUserByAuthId(authId, ["reservations"]);
 
-    if (!user) throw new UserInputError("Cannot find user");
+    if (!user) throw new EntityNotFoundError(User, "authId");
 
     return user.reservations;
   }
@@ -37,8 +37,6 @@ export class UserService {
       ]);
     }
 
-    if (!user) throw new UserInputError("Cannot find user");
-
-    return user;
+    return user!;
   }
 }
