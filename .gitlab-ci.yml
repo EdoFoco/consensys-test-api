@@ -1,0 +1,101 @@
+image: node:latest
+
+variables:
+  AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+  AWS_DEFAULT_REGION: $AWS_DEFAULT_REGION
+  ECR_REGISTRY: $ECR_REGISTRY
+  AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+  APP_NAME: $APP_NAME
+  SERVICE_NAME: $APP_NAME
+  DB_HOST_STAGING: $DB_HOST_STAGING
+  DB_USERNAME_STAGING: $DB_USERNAME_STAGING
+  DB_PASSWORD_STAGING: $DB_PASSWORD_STAGING
+  DB_NAME_STAGING: $DB_NAME_STAGING
+  JWT_AUDIENCE_STAGING: $JWT_AUDIENCE_STAGING
+  JWT_JWKS_URL_STAGING: $JWT_JWKS_URL_STAGING
+  JWT_ISSUER_STAGING: $JWT_ISSUER_STAGING
+  EXECUTION_ROLE_ARN_STAGING: $EXECUTION_ROLE_ARN_STAGING
+  TASK_ROLE_ARN_STAGING: $TASK_ROLE_ARN_STAGING
+
+stages:
+  - build
+  - test
+  - deploy
+
+build:
+  stage: build
+  environment: staging
+  script:
+    - npm install
+    - npm run build
+  cache:
+    paths:
+      - node_modules/
+  artifacts:
+    expire_in: 1 days
+    when: on_success
+    paths:
+      - node_modules/
+      - dist/
+      - infrastructure/
+
+test:
+  stage: test
+  environment: staging
+  coverage: /All files[^|]*\|[^|]*\s+([\d\.]+)/
+  dependencies:
+    - build
+  script:
+    - npm run test:cover
+  artifacts:
+    when: always
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage/cobertura-coverage.xml
+
+deploy:
+  stage: deploy
+  environment: staging
+  variables:
+    ENV: staging
+    STACK_NAME: consensys-test-$SERVICE_NAME-service-${ENV}
+    DB_HOST: $DB_HOST_STAGING
+    DB_USERNAME: $DB_USERNAME_STAGING
+    DB_PASSWORD: $DB_PASSWORD_STAGING
+    DB_NAME: $DB_NAME_STAGING
+    JWT_AUDIENCE: $JWT_AUDIENCE_STAGING
+    JWT_JWKS_URL: $JWT_JWKS_URL_STAGING
+    JWT_ISSUER: $JWT_ISSUER_STAGING
+    EXECUTION_ROLE_ARN: $EXECUTION_ROLE_ARN_STAGING
+    TASK_ROLE_ARN: $TASK_ROLE_ARN_STAGING
+  image:
+    name: docker:latest
+  services:
+    - docker:19-dind
+  dependencies:
+    - build
+  before_script:
+    - apk add --no-cache curl jq python3 py3-pip gettext
+    - pip install awscli
+    - echo $ECR_REGISTRY
+    - echo $APP_NAME
+    - echo $AWS_ACCESS_KEY_ID
+    - echo $AWS_SECRET_ACCESS_KEY
+    - echo $AWS_DEFAULT_REGION
+    - aws configure set aws_access_key_id $AWS_ACCESS_KEY_ID
+    - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
+    - aws configure set region $AWS_DEFAULT_REGION
+    - docker login -u AWS -p $(aws ecr get-login-password --region eu-west-1) $ECR_REGISTRY
+    - aws --version
+    - docker info
+    - docker --version
+  script:
+    - docker build -t $APP_NAME .
+    - docker tag $APP_NAME:latest $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
+    - docker push $ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
+    - export IMAGE=$ECR_REGISTRY/$APP_NAME:$CI_PIPELINE_IID
+    - envsubst < infrastructure/aws/6_task-definition.json > task-definition.staging.json
+    - cat task-definition.staging.json
+    - aws ecs register-task-definition --cli-input-json file://task-definition.staging.json
+    - aws ecs update-service --cluster consensys-ecs-$ENV --service $SERVICE_NAME-$ENV --task-definition ${SERVICE_NAME}-${ENV}

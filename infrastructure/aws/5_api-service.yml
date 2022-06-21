@@ -1,0 +1,158 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Consensys Test API Service - AWS Fargate deployment, hosted in a private subnet, behind a public load balancer.
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: staging
+    Description: The name of the environment to add this service to
+  ServiceName:
+    Type: String
+    Default: consensys-test-api
+    Description: A name for the service
+  TaskDefinition:
+    Type: String
+    Default: consensys-test-api
+    Description: "arn:"
+
+Resources:
+  # Service
+  Service:
+    Type: AWS::ECS::Service
+    Properties:
+      ServiceName: !Sub ${ServiceName}-${EnvironmentName}
+      Cluster:
+        Fn::ImportValue: !Sub ${EnvironmentName}:ClusterName
+      LaunchType: FARGATE
+      DeploymentConfiguration:
+        MaximumPercent: 200
+        MinimumHealthyPercent: 75
+      DesiredCount: 1
+      ServiceRegistries:
+        - RegistryArn:
+            Fn::ImportValue: !Sub ${EnvironmentName}:${ServiceName}InternalLocalNamespace
+      NetworkConfiguration:
+        AwsvpcConfiguration:
+          SecurityGroups:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:ECSClusterSecurityGroup
+          Subnets:
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetOne
+            - Fn::ImportValue: !Sub ${EnvironmentName}:PrivateSubnetTwo
+      TaskDefinition: !Sub ${TaskDefinition}
+      LoadBalancers:
+        - ContainerName: !Sub ${ServiceName}-${EnvironmentName}
+          ContainerPort: 80
+          TargetGroupArn:
+            Fn::ImportValue: !Sub ${EnvironmentName}:apiServiceTargetGroup
+
+  # Autoscaling
+  ScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    DependsOn: Service
+    Properties:
+      ServiceNamespace: "ecs"
+      ScalableDimension: "ecs:service:DesiredCount"
+      ResourceId:
+        Fn::Join:
+          - "/"
+          - - service
+            - Fn::ImportValue: !Sub ${EnvironmentName}:ECSClusterName
+            - !Sub ${ServiceName}-${EnvironmentName}
+      MinCapacity: 1
+      MaxCapacity: 5
+      RoleARN:
+        Fn::ImportValue: !Sub ${EnvironmentName}:AutoscalingRole
+
+  # Create scaling policies that describe how to scale the service up and down.
+  ScaleDownPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: ScalableTarget
+    Properties:
+      PolicyName: !Sub scale-${ServiceName}-${EnvironmentName}-down
+      PolicyType: StepScaling
+      ResourceId:
+        Fn::Join:
+          - "/"
+          - - service
+            - Fn::ImportValue: !Sub ${EnvironmentName}:ECSClusterName
+            - !Sub ${ServiceName}-${EnvironmentName}
+      ScalableDimension: "ecs:service:DesiredCount"
+      ServiceNamespace: "ecs"
+      StepScalingPolicyConfiguration:
+        AdjustmentType: "ChangeInCapacity"
+        StepAdjustments:
+          - MetricIntervalUpperBound: 0
+            ScalingAdjustment: -1
+        MetricAggregationType: "Average"
+        Cooldown: 60
+
+  ScaleUpPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    DependsOn: ScalableTarget
+    Properties:
+      PolicyName: !Sub scale-${ServiceName}-${EnvironmentName}-up
+      PolicyType: StepScaling
+      ResourceId:
+        Fn::Join:
+          - "/"
+          - - service
+            - Fn::ImportValue: !Sub ${EnvironmentName}:ECSClusterName
+            - !Sub ${ServiceName}-${EnvironmentName}
+      ScalableDimension: "ecs:service:DesiredCount"
+      ServiceNamespace: "ecs"
+      StepScalingPolicyConfiguration:
+        AdjustmentType: "ChangeInCapacity"
+        StepAdjustments:
+          - MetricIntervalLowerBound: 0
+            MetricIntervalUpperBound: 15
+            ScalingAdjustment: 1
+          - MetricIntervalLowerBound: 15
+            MetricIntervalUpperBound: 25
+            ScalingAdjustment: 2
+          - MetricIntervalLowerBound: 25
+            ScalingAdjustment: 3
+        MetricAggregationType: "Average"
+        Cooldown: 60
+
+  # Create alarms to trigger the scaling policies
+  LowCpuUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub low-cpu-${ServiceName}-${EnvironmentName}
+      AlarmDescription: !Sub "Low CPU utilization for service ${ServiceName}-${EnvironmentName}"
+      MetricName: CPUUtilization
+      Namespace: AWS/ECS
+      Dimensions:
+        - Name: ServiceName
+          Value: !Sub ${ServiceName}-${EnvironmentName}
+        - Name: ClusterName
+          Value:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ECSClusterName
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 20
+      ComparisonOperator: LessThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref ScaleDownPolicy
+
+  HighCpuUsageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub high-cpu-${ServiceName}-${EnvironmentName}
+      AlarmDescription: !Sub "High CPU utilization for service ${ServiceName}-${EnvironmentName}"
+      MetricName: CPUUtilization
+      Namespace: AWS/ECS
+      Dimensions:
+        - Name: ServiceName
+          Value: !Sub ${ServiceName}-${EnvironmentName}
+        - Name: ClusterName
+          Value:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ECSClusterName
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 40
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      AlarmActions:
+        - !Ref ScaleUpPolicy

@@ -1,0 +1,164 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Consensys ECS setup.
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: staging
+    Description: "Environment name (e.g. staging, production)"
+  BaseEnvironmentName:
+    Type: String
+    Default: base
+    Description: "Environment name (e.g. base, staging, production)"
+  ClusterName:
+    Type: String
+    Default: consensys-ecs
+    Description: "Name of the ECS cluster (e.g. consensys-ecs)"
+
+Resources:
+  # Cluster
+  ECSCluster:
+    Type: AWS::ECS::Cluster
+    Properties:
+      ClusterName: !Sub ${ClusterName}-${EnvironmentName}
+
+  # Security Groups
+  ECSClusterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the Fargate containers
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          Description: "Allow connections from OpenVPN"
+          FromPort: 80
+          ToPort: 80
+          SourceSecurityGroupId:
+            Fn::ImportValue: !Sub ${BaseEnvironmentName}:OpenVpnSG
+      Tags:
+        - Key: "Name"
+          Value: !Sub ecs-cluster-sg-${EnvironmentName}
+
+  # Autoreferencing security group
+  ECSClusterSecurityGroupSelfIngress:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from itself
+      GroupId: !Ref "ECSClusterSecurityGroup"
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref "ECSClusterSecurityGroup"
+      Tags:
+        - Key: "Name"
+          Value: !Sub ecs-sg-self-ingress-to-ecs-${EnvironmentName}
+
+  # AutoScaling
+  AutoscalingRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [application-autoscaling.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      Path: /
+      Policies:
+        - PolicyName: service-autoscaling
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "application-autoscaling:*"
+                  - "cloudwatch:DescribeAlarms"
+                  - "cloudwatch:PutMetricAlarm"
+                  - "ecs:DescribeServices"
+                  - "ecs:UpdateService"
+                Resource: "*"
+  #Roles
+  ECSRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      Path: /
+      Policies:
+        - PolicyName: ecs-service
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  # Rules which allow ECS to attach network interfaces to instances
+                  # on your behalf in order for awsvpc networking mode to work right
+                  - "ec2:AttachNetworkInterface"
+                  - "ec2:CreateNetworkInterface"
+                  - "ec2:CreateNetworkInterfacePermission"
+                  - "ec2:DeleteNetworkInterface"
+                  - "ec2:DeleteNetworkInterfacePermission"
+                  - "ec2:Describe*"
+                  - "ec2:DetachNetworkInterface"
+                  - "elasticloadbalancing:DeregisterInstancesFromLoadBalancer"
+                  - "elasticloadbalancing:DeregisterTargets"
+                  - "elasticloadbalancing:Describe*"
+                  - "elasticloadbalancing:RegisterInstancesWithLoadBalancer"
+                  - "elasticloadbalancing:RegisterTargets"
+                Resource: "*"
+
+  ECSTaskExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs-tasks.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      Path: /
+      Policies:
+        - PolicyName: AmazonECSTaskExecutionRolePolicy
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "ecr:GetAuthorizationToken"
+                  - "ecr:BatchCheckLayerAvailability"
+                  - "ecr:GetDownloadUrlForLayer"
+                  - "ecr:BatchGetImage"
+                  - "logs:CreateLogStream"
+                  - "logs:PutLogEvents"
+                Resource: "*"
+
+Outputs:
+  ClusterName:
+    Description: The name of the ECS cluster
+    Value: !Ref "ECSCluster"
+    Export:
+      Name: !Sub ${EnvironmentName}:ClusterName
+  AutoscalingRole:
+    Description: The ARN of the role used for autoscaling
+    Value: !GetAtt "AutoscalingRole.Arn"
+    Export:
+      Name: !Sub ${EnvironmentName}:AutoscalingRole
+  ECSRole:
+    Description: The ARN of the ECS role
+    Value: !GetAtt "ECSRole.Arn"
+    Export:
+      Name: !Sub ${EnvironmentName}:ECSRole
+  ECSTaskExecutionRole:
+    Description: The ARN of the ECS role
+    Value: !GetAtt "ECSTaskExecutionRole.Arn"
+    Export:
+      Name: !Sub ${EnvironmentName}:ECSTaskExecutionRole
+  EcsSecurityGroup:
+    Description: A security group used to allow Fargate containers to receive traffic
+    Value: !Ref "ECSClusterSecurityGroup"
+    Export:
+      Name: !Sub ${EnvironmentName}:ECSClusterSecurityGroup
+  ECSClusterName:
+    Description: Cluster name
+    Value: !Sub ${ClusterName}-${EnvironmentName}
+    Export:
+      Name: !Sub ${EnvironmentName}:ECSClusterName

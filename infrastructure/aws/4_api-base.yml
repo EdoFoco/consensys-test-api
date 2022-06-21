@@ -1,0 +1,243 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Base resources for api service (public lb, targetgroup, log group)
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: staging
+    Description: The name of the environment to add this service to
+  ServiceName:
+    Type: String
+    Default: consensys-test-api
+    Description: A name for the service
+  SSLCertArn:
+    Type: String
+    Default: arn:aws:acm:eu-west-1:593263191272:certificate/17f6feb2-5aba-499b-b567-d83c26149ec9
+    Description: The ARN of the ssl cert to be used
+  DbInstanceType:
+    Type: String
+    Default: db.t3.micro
+    Description: "Type of instance (e.g. db.t3.small, db.t3.medium, db.t3.large)"
+  DbMasterUsername:
+    Type: String
+    Default: adminuser
+    Description: "The username of the root user"
+  DbName:
+    Type: String
+    Default: MeetingRooms
+    Description: "The name of the database"
+  DbMasterPassword:
+    NoEcho: true
+    Type: String
+    Default: password
+    Description: "The password of the root user"
+
+Resources:
+  # Database
+  Database:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Sub ${ServiceName}-db-${EnvironmentName}
+      VPCSecurityGroups:
+        - !Ref "SecurityGroup"
+      DBSubnetGroupName:
+        Fn::ImportValue: !Sub ${EnvironmentName}:PrivateDbSubnetGroup
+      AllocatedStorage: "5"
+      DBInstanceClass: !Ref "DbInstanceType"
+      Engine: postgres
+      MasterUsername: !Ref "DbMasterUsername"
+      MasterUserPassword: !Ref "DbMasterPassword"
+      DBName: !Ref "DbName"
+    DeletionPolicy: Snapshot
+
+  # Security Group
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      GroupDescription: "Security group to allow traffic to Financial Data Db"
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          Description: "Allow connections from ECS Cluster"
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId:
+            Fn::ImportValue: !Sub ${EnvironmentName}:ECSClusterSecurityGroup
+        - IpProtocol: tcp
+          Description: "Allow connections from OpenVpn"
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId:
+            Fn::ImportValue: base:OpenVpnSG
+      Tags:
+        - Key: "Name"
+          Value: !Sub ${ServiceName}-sg-${EnvironmentName}
+
+  # Load Balancer
+  PublicLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      LoadBalancerAttributes:
+        - Key: idle_timeout.timeout_seconds
+          Value: "30"
+      Subnets:
+        - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetOne
+        - Fn::ImportValue: !Sub ${EnvironmentName}:PublicSubnetTwo
+      SecurityGroups: [!Ref "PublicLoadBalancerSG"]
+
+  PublicLoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    DependsOn:
+      - PublicLoadBalancer
+    Properties:
+      Certificates:
+        - CertificateArn: !Ref SSLCertArn
+      DefaultActions:
+        - TargetGroupArn: !Ref "TargetGroup"
+          Type: "forward"
+      LoadBalancerArn: !Ref "PublicLoadBalancer"
+      Port: 443
+      Protocol: HTTPS
+
+  HttpRedirectListener:
+    Type: "AWS::ElasticLoadBalancingV2::Listener"
+    Properties:
+      DefaultActions:
+        - Type: "redirect"
+          RedirectConfig:
+            Protocol: "HTTPS"
+            Port: "443"
+            Host: "#{host}"
+            Path: "/#{path}"
+            Query: "#{query}"
+            StatusCode: "HTTP_301"
+      LoadBalancerArn: !Ref PublicLoadBalancer
+      Port: 80
+      Protocol: "HTTP"
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      HealthCheckIntervalSeconds: 6
+      HealthCheckPath: /
+      HealthCheckProtocol: HTTPS
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      TargetType: ip
+      Name: !Sub ${ServiceName}-${EnvironmentName}
+      Port: 80
+      Protocol: HTTP
+      UnhealthyThresholdCount: 2
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      Tags:
+        - Key: "Name"
+          Value: !Sub ${ServiceName}-tg-${EnvironmentName}
+
+  # Security Groups
+  PublicLoadBalancerSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Access to the public for identity-service-sts
+      VpcId:
+        Fn::ImportValue: !Sub ${EnvironmentName}:VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: "Name"
+          Value: !Sub ${ServiceName}-sg-${EnvironmentName}
+
+  apiServiceEcsSecurityGroupIngressFromPrivateALB:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Ingress from the private ALB
+      GroupId:
+        Fn::ImportValue: !Sub "${EnvironmentName}:ECSClusterSecurityGroup"
+      IpProtocol: -1
+      SourceSecurityGroupId: !Ref "PublicLoadBalancerSG"
+      Tags:
+        - Key: "Name"
+          Value: !Sub ${ServiceName}-sg-ingress-to-ecs-${EnvironmentName}
+
+  apiServicePrivateLoadBalancerIngressFromECS:
+    Type: AWS::EC2::SecurityGroupIngress
+    Properties:
+      Description: Only accept traffic from a container in the fargate container security group
+      GroupId: !Ref "PublicLoadBalancerSG"
+      IpProtocol: -1
+      SourceSecurityGroupId:
+        Fn::ImportValue: !Sub "${EnvironmentName}:ECSClusterSecurityGroup"
+      Tags:
+        - Key: "Name"
+          Value: !Sub ${ServiceName}-sg-ingress-from-ecs-${EnvironmentName}
+
+  # Log Group
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub ${ServiceName}-${EnvironmentName}
+
+  # Discovery
+  InternalDiscovery:
+    Type: AWS::ServiceDiscovery::Service
+    Properties:
+      Name: !Sub ${ServiceName}
+      HealthCheckCustomConfig:
+        FailureThreshold: 1
+      DnsConfig:
+        DnsRecords:
+          - Type: A
+            TTL: 60
+        NamespaceId:
+          Fn::ImportValue: !Sub ${EnvironmentName}:LocalNamespace
+
+  TaskRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: [ecs-tasks.amazonaws.com]
+            Action: ["sts:AssumeRole"]
+      Path: /
+      Policies:
+        - PolicyName: !Sub apiServicePolicy-${EnvironmentName}
+          PolicyDocument:
+            Statement:
+              - Effect: Allow
+                Action:
+                  - ses:SendEmail
+                  - ses:SendTemplatedEmail
+                  - ses:SendRawEmail
+                Resource: "*"
+
+Outputs:
+  apiServiceTargetGroup:
+    Description: Target group for api service
+    Value: !Ref "TargetGroup"
+    Export:
+      Name: !Sub ${EnvironmentName}:apiServiceTargetGroup
+  apiServiceLoadBalancerSG:
+    Description: External load balancer SG
+    Value: !Ref "PublicLoadBalancerSG"
+    Export:
+      Name: !Sub ${EnvironmentName}:apiServicePublicLoadBalancerSG
+  InternalDiscoveryArn:
+    Description: Internal service discovery ARN
+    Value: !GetAtt InternalDiscovery.Arn
+    Export:
+      Name: !Sub ${EnvironmentName}:${ServiceName}InternalLocalNamespace
+  TaskRole:
+    Description: The ARN of the ECS role
+    Value: !GetAtt "TaskRole.Arn"
+    Export:
+      Name: !Sub ${EnvironmentName}:apiTaskRole

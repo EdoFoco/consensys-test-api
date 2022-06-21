@@ -1,0 +1,42 @@
+version: "3"
+networks:
+  consenys-test:
+
+services:
+  # Backend Db
+  consenys-test-db:
+    image: "postgres:latest"
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: username
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: meeting-rooms-db
+    volumes:
+      - consenys-test-db:/var/lib/consenys-test
+    networks:
+      - consenys-test
+
+  # Backend
+  backend:
+    build:
+      context: ../../
+      dockerfile: Dockerfile
+    depends_on:
+      - consenys-test-db
+    networks:
+      - consenys-test
+    environment:
+      - CORS_ORIGIN=*
+      - PORT=80
+      - DB_HOST=consenys-test-db
+      - DB_USERNAME=username
+      - DB_PASSWORD=password
+      - DB_NAME=meeting-rooms-db
+      - JWT_AUDIENCE=localhost:3001
+      - JWT_JWKS_URL=https://edoardo-foco.eu.auth0.com/.well-known/jwks.json
+      - JWT_ISSUER=https://edoardo-foco.eu.auth0.com/
+    ports:
+      - 80:80
+volumes:
+  consenys-test-db:

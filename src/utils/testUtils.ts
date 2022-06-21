@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { ApiContext, Identity } from "../middleware";
 
 export const createFakeApiContext = (
-  body: any | undefined,
+  body: unknown | undefined,
   sub: string | undefined
 ): ApiContext => {
   return {
