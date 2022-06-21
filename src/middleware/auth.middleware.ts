@@ -14,7 +14,7 @@ const client = jwks({
   jwksUri: process.env.JWT_JWKS_URL ?? "",
 });
 
-/** Todo: I suspect there is an issue with the VerifyCallback typings. Use any for nwo */
+/** Todo: I suspect there is an issue with the VerifyCallback typings. Use any for now */
 function getKey(header: JwtHeader, callback: any) {
   client.getSigningKey(header.kid, function (_: any, key: any) {
     const signingKey = key?.publicKey || key?.rsaPublicKey;

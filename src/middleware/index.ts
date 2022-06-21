@@ -1,4 +1,4 @@
-import { isAuth } from "./isAuth";
+import { isAuth } from "./auth.middleware";
 import { ApiContext, Identity } from "./types";
 
 export { isAuth };
