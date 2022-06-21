@@ -72,7 +72,7 @@ describe("ReservationResolver - deleteReservation() - ", () => {
     // Act
     try {
       await sut.deleteReservation(fakeApiContext, "000000");
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Assert
       const ex = e as ForbiddenError;
 
@@ -169,7 +169,7 @@ describe("ReservationResolver - createReservation() - ", () => {
       const reservation = new Reservation();
       reservation.userId = "456";
       await sut.createReservationForCurrentUser(fakeApiContext, reservation);
-    } catch (e: any) {
+    } catch (e: unknown) {
       // Assert
       const ex = e as ForbiddenError;
 

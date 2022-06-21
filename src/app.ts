@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import "dotenv-safe/config";
+import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { ApolloServer } from "apollo-server-express";
