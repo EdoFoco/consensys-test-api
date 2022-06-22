@@ -37,6 +37,8 @@ export class UserService {
       ]);
     }
 
-    return user!;
+    if (!user) throw new EntityNotFoundError(User, "authId");
+
+    return user;
   }
 }
