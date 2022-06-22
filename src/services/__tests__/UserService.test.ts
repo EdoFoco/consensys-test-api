@@ -94,7 +94,7 @@ describe("UserService - getOrCreateUser() - ", () => {
     expect(result.authId).toBe(user.authId);
 
     userRepoMock.verify(
-      (i) => i.getUserByAuthId(user.authId, It.IsAny<String[]>()),
+      (i) => i.getUserByAuthId(user.authId, It.IsAny<string[]>()),
       Times.Exactly(2)
     );
     userRepoMock.verify((i) => i.createUser(user.authId), Times.Once());

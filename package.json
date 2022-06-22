@@ -18,6 +18,8 @@
   "author": "Edoardo Foco",
   "license": "ISC",
   "dependencies": {
+    "@types/cors": "^2.8.12",
+    "@types/express": "^4.17.13",
     "@types/jsonwebtoken": "^8.5.8",
     "apollo-server-express": "^3.8.2",
     "cors": "^2.8.5",
@@ -35,8 +37,6 @@
     "typeorm-typedi-extensions": "^0.4.1"
   },
   "devDependencies": {
-    "@types/cors": "^2.8.12",
-    "@types/express": "^4.17.13",
     "@types/jest": "^28.1.1",
     "@typescript-eslint/eslint-plugin": "^5.28.0",
     "@typescript-eslint/parser": "^5.28.0",
