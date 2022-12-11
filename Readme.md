@@ -1,4 +1,4 @@
-# Room Booking System
+# TS Example Graphql API
 
 This is a meeting room system API built on Apollo GraphQL + Typescript + Typeorm + PostgresSQL.
 
